@@ -1,299 +1,305 @@
 ---
 name: ai-humanizer
 description: >
-  Rewrites AI-generated text to sound authentically human — avoiding AI detector flags from tools like GPTZero, Turnitin, Originality.ai, and Grammarly AI Detector. Use this skill any time the user wants to humanize, de-AI, rewrite, or 'pass' AI-generated text, or when they ask to make text sound more natural, bypass AI detection, reduce AI score, or make writing sound like a real person wrote it. Also trigger when users say things like 'make this not sound like AI,' 'can you rewrite this so it passes Turnitin,' or 'this needs to sound more human.' Always use this skill before producing any humanized output — even for short passages.
+  Rewrites AI-generated text to sound authentically human. Trigger this skill whenever the user wants to humanize text, reduce an AI detection score, pass GPTZero, Turnitin, Originality.ai, or Grammarly AI Detector, or make writing sound like a real person wrote it. Also trigger for: 'make this not sound like AI', 'can you rewrite this so it passes [detector]', 'this needs to sound more human', 'de-AI this', 'make this less robotic', or any request to rewrite AI-generated content. Always invoke this skill before producing humanized output — even for a single paragraph. Do not attempt to humanize text without it.
 ---
 
 # AI Humanizer Skill
 
-Rewrites AI-generated text so it reads as authentic human writing — bypassing AI detectors and resonating naturally with human readers.
-
-## What You're Actually Doing
-
-Two goals, both matter:
-
-1. **Defeat detectors** — GPTZero, Turnitin, Originality.ai, Grammarly AI Detector all use perplexity (word predictability) and burstiness (sentence length variation) as primary signals, plus vocabulary scanning and structural fingerprinting.
-
-2. **Make it actually good** — Technically "clean" text can still read as dead. Soulless writing has no opinions, no rhythm, no acknowledgment that a human being wrote it. Avoiding AI patterns is only half the job.
-
-Both checks happen before any output goes to the user.
+Rewrites AI-generated text to read as authentic human writing — passing AI detectors and convincing human readers.
 
 ---
 
-## How Detectors Work (What You're Defeating)
+## The Two Failure Modes
 
-**Primary signals:**
-- **Perplexity** — AI text is too predictable. Models pick statistically likely next words. Human writers surprise. Introduce lexical unpredictability.
-- **Burstiness** — AI sentences are uniform in length and structure. Human writing fluctuates wildly. This is the most powerful lever you have.
+Every bad humanization job fails in one of two ways:
 
-**Secondary signals:**
-- Flagged vocabulary (kill list)
-- Structural fingerprints: formulaic openers/closers, bullet-heavy structure, parallel lists, section headers, meta-commentary
-- Punctuation patterns: em dash overuse, semicolons everywhere, over-perfect grammar
-- Tone homogeneity: too neutral, no personality, no uncertainty, no opinions
+**Failure Mode 1 — Technically clean, humanly dead.** The vocabulary passes a scanner but the writing has no point of view, no rhythm variation, no personality. It reads like a press release from a company that doesn't exist. Detectors miss it; humans don't.
 
-**Detector-specific notes:**
-- **Turnitin** — weights academic register heavily. Formulaic thesis structures, parallel evidence presentation, and hedging language are major flags.
-- **GPTZero** — most sensitive to perplexity and burstiness. Sentence rhythm variation is the #1 fix.
-- **Originality.ai** — strong vocabulary scanner. Kill list compliance is critical.
-- **Grammarly AI** — focuses on structural and style fingerprints. Vary paragraph structure aggressively.
+**Failure Mode 2 — Has personality, trips the signals.** Voice is there but sentence lengths are uniform, flagged vocabulary slipped through, or the structure is too templated. Humans like it; detectors don't.
+
+The goal is to pass both. This process fixes both, in order.
 
 ---
 
-## Signs of Soulless Writing (Even If Technically Clean)
+## How AI Detectors Actually Score Text
 
-Passing detectors doesn't mean passing human readers. Before finalizing, check for:
-- Every sentence the same length and structure
-- No opinions, just neutral reporting
-- No acknowledgment of uncertainty or mixed feelings
-- No first-person perspective when appropriate
-- No humor, no edge, no personality
-- Reads like a Wikipedia article or press release
+Detectors don't read for meaning — they score statistical properties:
 
-**How to add soul:**
-- Have opinions. React to facts, don't just report them.
-- Vary rhythm aggressively. Short punchy sentences. Then longer ones that build.
-- Acknowledge complexity honestly. "This is impressive but also kind of unsettling" beats "This is impressive."
-- Use "I" when it fits. "I keep coming back to..." signals a real person.
-- Let some mess in. Tangents, asides, half-formed thoughts are human.
-- Be specific about feelings. Not "this is concerning" but "there's something unsettling about it."
+**Perplexity score** — how surprising each word choice is given the words before it. LLMs pick high-probability next tokens by design. Human writers make low-probability choices constantly, through idiom, personal voice, and domain knowledge. Low perplexity = AI. Fix: introduce lexical unpredictability at the word level.
+
+**Burstiness score** — the variance in sentence length across a passage. AI output has low variance (sentences cluster around 15–22 words). Human writing swings between 3-word punches and 35-word builds. Fix: the rhythm formula in Step 4.
+
+**Vocabulary fingerprint** — a weighted scan against known AI word lists, cross-referenced with model-specific output patterns. Fix: the kill list in `references/kill-list.md`.
+
+**Structural fingerprint** — pattern matching against common AI document structures: formulaic openers, parallel evidence lists, templated argument shapes, transition-heavy prose. Fix: Step 3.
+
+**Detector-specific weightings:**
+- **GPTZero** — perplexity and burstiness are the primary signals. Rhythm variation is the #1 fix here.
+- **Turnitin** — weights structural fingerprints and academic formula patterns. Thesis-evidence-conclusion structure, parallel hedging, and passive voice chains are major flags.
+- **Originality.ai** — heaviest vocabulary scanner of the major detectors. Kill list compliance is non-negotiable.
+- **Grammarly AI** — focuses on punctuation patterns and micro-style: em dash density, semicolon frequency, bolding patterns. Cleanup in Step 6 targets this specifically.
 
 ---
 
 ## The Process
 
-### Step 1 — Understand Context First
+### Step 1 — Read the Room
 
-Before rewriting, identify: purpose (academic essay? LinkedIn? blog? email?), audience (formal or casual?), voice (first/third person? brand tone?), desired reading level (aim Flesch 60–70 for most online content).
+Before touching a word, establish:
+- **Purpose** — what is this piece of writing trying to do? (inform, persuade, connect, instruct)
+- **Format** — academic essay, LinkedIn post, blog, email, report, creative writing?
+- **Audience** — who reads this and what do they expect?
+- **Voice** — first person, third person, brand voice, anonymous?
 
-Use the Register Guide at the bottom to calibrate. If the context is ambiguous, ask one concise question before proceeding.
+Use the Register Guide at the bottom to calibrate tone. If any of this is ambiguous, ask the user one question before proceeding. Getting this wrong means rewriting in the wrong direction.
 
 ---
 
 ### Step 2 — Vocabulary Detox
 
-Strip or replace ALL flagged words. See `references/kill-list.md` for the full categorized list.
+Run every sentence through the kill list in `references/kill-list.md`. The quick replacements below cover the most common offenders — the full list is in the reference file.
 
-**Core rule:** if a word would make a human reader think "that sounds like ChatGPT" — kill it.
+**Core rule:** if reading the word aloud would make someone think "ChatGPT wrote this" — replace it.
 
-**Quick replacements (never use the left column):**
-- delve → look into, explore, dig into
-- tapestry → mix, combination, blend
+**Immediate replacements:**
+- delve → look into, dig into, explore
+- tapestry → mix, blend, picture
 - realm → area, field, world
 - utilize → use
-- facilitate → help, support, enable
+- facilitate → help, support, make easier
 - commence → start, begin
 - endeavour → effort, attempt, try
 - multifaceted → complex, layered
 - pivotal → key, critical, central
 - paramount → most important, top priority
-- meticulous → careful, thorough, detailed
-- commendable → impressive, solid, worth noting
-- cutting-edge → new, latest, modern
-- revolutionary → new, game-changing (use sparingly)
+- meticulous → careful, thorough
+- commendable → impressive, solid
+- cutting-edge → new, latest, current
 - testament to → proof of, shows that
-- underscore → highlight, show, point to
+- underscore → highlight, show
 - leverage → use, take advantage of
-- seamlessly → smoothly, without friction
+- seamlessly → smoothly
 - harness → use, tap into
 - groundbreaking → significant, new
-- transformative → big change, meaningful shift
+- transformative → major, meaningful
 - vibrant → lively, busy, rich
-- beacon → guide, example, model
-- embark → start, begin, set out
+- embark → start, set out
 - navigate (metaphor) → handle, deal with, work through
-- foster → build, develop, grow
-- bolster → strengthen, support, boost
+- bolster → strengthen, support
 - illuminate → show, reveal, make clear
-- showcase → show, display, demonstrate
-- garner → get, earn, draw
-- nestled → sitting, located, set
+- showcase → show, demonstrate
+- garner → get, earn
+- foster → build, develop, grow
 
-**Also strip:**
-- Filler openers: "In today's ever-evolving world...", "It is important to note that...", "In the realm of..."
+**Strip entirely:**
+- Filler openers: "In today's world...", "It is important to note...", "In the realm of..."
 - Hollow closers: "In conclusion...", "In summary...", "In essence...", "Ultimately..."
-- Sycophantic openers: "Certainly!", "Great question!", "Absolutely!"
-- Meta-commentary: "In this article, we will explore...", "As we discussed earlier..."
-- Chatbot artifacts: "I hope this helps", "Would you like me to expand on...", "Feel free to ask"
-- Knowledge-cutoff hedges: "as of my last update", "while specific details are limited"
-- Corporate speak: synergy, ecosystem (metaphorical), paradigm shift, value proposition, thought leader, stakeholder
+- Chatbot openers: "Certainly!", "Absolutely!", "Great question!"
+- Chatbot closers: "I hope this helps", "Feel free to ask", "Let me know if you'd like me to expand"
+- Meta-commentary: "In this piece, we will explore...", "As discussed above..."
+- Hedging artifacts: "as of my last update", "based on available information"
+- Corporate filler: synergy, paradigm shift, value proposition, thought leader, ecosystem (metaphorical)
 
-**Copula avoidance — a subtle AI tell:** Replace false verbs that dress up "is/are/has" as something more important:
+**Verb inflation** — AI replaces flat, accurate verbs with elevated ones to sound more authoritative. It's a statistical habit from training on formal writing. Reverse it:
 - "serves as" → is
 - "stands as" → is
-- "marks" (when meaning "is") → is
+- "acts as" → is / works as
 - "boasts" → has
-- "features" (when meaning "has") → has
-- "represents" (when meaning "is") → is
+- "features" (meaning has) → has
+- "marks" (meaning is) → is
+- "represents" (meaning is) → is
+- "functions as" → works as / is
 
-**Synonym cycling:** AI avoids repeating words by substituting synonyms. Humans repeat words naturally. If the text uses "significant", "notable", "considerable", and "meaningful" to describe the same type of thing, that's AI. Pick one word and use it consistently.
+**Lexical rotation** — AI is statistically penalized for repeating words, so it cycles synonyms: "significant / notable / considerable / meaningful / substantial" used interchangeably throughout a piece. This pattern reads as unnatural because real writers repeat words without anxiety. Identify rotating synonym clusters and pick one word. Use it consistently.
 
 ---
 
-### Step 3 — Structural Pattern Removal
+### Step 3 — Structural Detox
 
-These patterns flag as AI even after vocabulary cleanup:
+Vocabulary alone isn't enough. These structural patterns trip detectors and human readers independently.
 
-**Formulaic structures to rewrite:**
-- "Not only X, but also Y" / "It isn't X, it's Y" / "Not just X, but Y" — pick a lane
-- "This is where X comes in" — just say what X does
-- "X is more than just Y; it's Z" — cut to Z
-- "The answer lies in..." — just give the answer
-- Rule of three: AI forces every argument into exactly three points. Break the pattern — use two, four, or leave it open-ended
-- Balanced-argument hedges: "On one hand... on the other hand..." — take a side
-- Negative parallelisms back-to-back: "Not just for A. Not just for B. But for C." — once is fine, twice is a tell
+**Argument templates to break:**
+- The three-point structure — AI defaults to three because it's the most common rhetorical template in training data. Use two points, four points, or don't number them at all.
+- "Not only X, but Y" / "It isn't X, it's Y" / "Not just X, but Y" — these contrast constructions read as manufactured. Pick a position directly.
+- "X is more than just Y; it's Z" — collapse it. Just say Z.
+- "This is where X comes in" — skip the announcement. Say what X does.
+- "The answer lies in..." — you have the answer; give it.
+- Back-to-back contrast stacking: "Not for A. Not for B. But for C." Once reads as intentional. Twice reads as AI.
 
-**Structural formatting tells:**
-- Inline-header bullet lists: bold header + colon + explanation in every bullet point (this is a strong AI fingerprint — convert to prose or plain bullets)
-- Title Case In Every Heading — use sentence case
-- Emojis in headings or bullets
-- Ending every section with a transition sentence to the next section
-- Listing exactly three pieces of evidence for every claim
+**Hollow scope claims** — phrases that gesture at breadth without adding information. Replace with something specific or cut entirely:
+- "from beginners to experts" → who specifically benefits?
+- "from startups to Fortune 500 companies" → what company size actually matters here?
+- "across all industries" → name the relevant industries
+- "for everyone" → who is this actually for?
 
-**False ranges:** "from startups to Fortune 500 companies", "from beginners to experts" — these rarely add meaning. Cut or replace with something specific.
+**Bureaucratic list structure** — AI over-organizes information by tagging every bullet point with a bold category label and colon. This fingerprint is strong and consistent. Convert to prose or plain bullets without labels.
+
+**Other formatting tells:**
+- Title Case In Every Heading → use sentence case
+- Emojis in headings or bullets (outside of casual social contexts)
+- Every section ending with a sentence that transitions to the next section
+- Parallel evidence: citing exactly three sources or examples for every claim
 
 **Transition replacements:**
-- Furthermore → Also / And / On top of that
-- Moreover → What's more / Plus
-- In addition → There's also the fact that
-- Therefore → So / Which means
-- However → But / That said / Still
-- Consequently → As a result / So
-- It is worth noting that → Worth mentioning:
-- Avoid starting every paragraph with a transition word
+- Furthermore → Also, And, On top of that
+- Moreover → What's more, Plus
+- In addition → There's also
+- Therefore → So, which means
+- However → But, That said, Still
+- Consequently → As a result, So
+- It is worth noting → Worth mentioning
+
+Don't start every paragraph with a transition word. It creates a cadence that reads as templated.
 
 ---
 
-### Step 4 — Sentence Structure (Burstiness Fix)
+### Step 4 — Rhythm Reconstruction
 
-The single most powerful lever for defeating perplexity and burstiness detectors.
+This is the highest-impact fix for burstiness scores. A single paragraph with uniform sentence length will flag regardless of vocabulary.
 
-**Rule:** no two adjacent sentences should be the same length or structure.
+**The rule:** no two adjacent sentences should be the same length or structural type.
 
-**Rhythm formula — apply across every paragraph:**
-Long sentence (20–30 words) → Short sentence (4–8 words) → Medium sentence (12–18 words) → Fragment or question.
+**The rhythm formula — cycle through this across every paragraph:**
 
-**Structural variety toolkit:**
-- Fragments: "Not a bad start." / "Especially now."
-- Questions: "But what does that actually mean?"
-- Starting with conjunctions: "And that's where it gets interesting." / "But here's the problem."
-- Short paragraph punches: a single sentence as its own paragraph
-- Contractions everywhere they naturally fit: don't, it's, they're, won't, you've, we're
+> Long sentence that builds context, adds detail, and moves toward a point (20–30 words). Short punch (4–8 words). Medium sentence that lands something (12–18 words). Fragment. Question?
 
-**Paragraph variety:** mix lengths (1 sentence, 3 sentences, 5 sentences). No more than 3 bullet points without a prose paragraph break. Avoid parallel-structure lists.
+**Tools for variety:**
+- Fragments: "Not ideal." / "Especially at scale." / "Worth knowing."
+- Sentence-opening questions: "So what actually changes?" / "But why does this matter?"
+- Conjunction openers: "And that's the part most people miss." / "But it doesn't stop there."
+- Single-sentence paragraphs — used once per section for impact.
+- Contractions wherever they don't feel forced: don't, it's, they're, won't, you've, we're, I'd
 
----
-
-### Step 5 — Inject Humanity
-
-Add at least one of these per 300 words:
-
-1. **Personal pronoun anchor:** "I've seen this go wrong when..." / "You'll notice..."
-2. **Concrete specifics:** replace "many studies" with "three 2024 studies from Stanford"; replace "significant improvement" with "a 34% jump in six months"
-3. **Rhetorical question:** "So why does this matter?"
-4. **Mild opinion or stance:** "Honestly, most of the advice out there gets this wrong."
-5. **Informal register dip:** "Here's the thing." / "Let's be real." / "Here's what's wild:"
-6. **Everyday analogy:** not "the complex interplay of factors" but "it's like trying to bake bread while the oven keeps changing temperature"
-7. **Acknowledgment of uncertainty:** "I'm not sure this fully explains it, but..." / "The data is messy here."
-8. **Specific emotional reaction:** not "this is concerning" but "there's something unsettling about the fact that..."
+**Paragraph length variation:** rotate between 1-sentence, 3-sentence, and 5-sentence paragraphs. Never run more than 3 bullet points without breaking back to prose.
 
 ---
 
-### Step 6 — Punctuation Cleanup
+### Step 5 — Authenticity Injection
 
-- **Em dashes:** max 1 per 300 words. They're a Claude fingerprint when overused.
-- **Semicolons:** use sparingly. When in doubt, make two sentences.
-- **Exclamation marks:** avoid unless genuinely warranted. Max 1 per entire piece.
-- **Bold/italics:** don't bold every key phrase. Bold is for genuine emphasis, used rarely.
-- **Curly quotes:** use straight quotes in casual/digital contexts if appropriate.
+Text can pass the structural and vocabulary checks and still read as hollow. This step adds the markers that signal a real person wrote it.
 
----
+Rate yourself on these five dimensions before finalizing (aim for at least 7/10 total):
 
-### Step 7 — Self-Audit Pass (Two-Pass Revision)
+**1. Specificity (0–2)**
+Replace abstractions with concrete details. "Many companies" → "Three companies I've worked with." "Significant improvement" → "37% drop in support tickets over 90 days." "Recent research" → "A 2024 University of Michigan study of 1,400 participants."
 
-After completing the draft, do not deliver it yet.
+**2. Opinion (0–2)**
+Real writers have a point of view. At least once per 300 words: "Honestly, most advice on this gets it backwards." / "I think this overstates the problem." / "The better question is why we accepted this for so long."
 
-Ask yourself: **"What still makes this obviously AI-generated?"**
+**3. Uncertainty (0–2)**
+AI writes with false confidence. Humans hedge naturally: "I'm not sure this fully holds up, but..." / "The data here is messier than it looks." / "Take this with appropriate skepticism."
 
-Answer in brief bullets — be honest and specific. Look for:
-- Any kill-list words that slipped through
-- Paragraphs with uniform sentence length
-- Any structural AI clichés still present
-- Sections that feel neutral and reporterly but have no human voice
-- Anything that would make a human reader think "ChatGPT wrote this"
+**4. Reader awareness (0–2)**
+Write toward the person reading, not toward the topic: "You'll notice this..." / "If you've tried this before, you already know..." / "This probably sounds obvious, but in practice it rarely is."
 
-Then revise based on those bullets. The self-audit catches what the checklist misses — it forces a fresh read with fresh eyes.
+**5. Register consistency (0–2)**
+Mixing formal and casual isn't a problem — inconsistency within a register is. Pick a lane and stay in it. A blog post that shifts from conversational to academic mid-paragraph reads as stitched together.
 
 ---
 
-### Step 8 — Final Quality Check
+### Step 6 — Punctuation Pass
 
-Before delivering:
-- [ ] No kill-list words remain
-- [ ] Sentence lengths vary significantly across every paragraph
-- [ ] No two adjacent paragraphs have the same structure
-- [ ] At least one human element per 300 words
-- [ ] Contractions used where appropriate
-- [ ] Zero meta-commentary or chatbot artifacts
-- [ ] Zero hollow closers
+- **Em dashes:** cap at 1 per 300 words. Overuse is a Claude fingerprint in particular.
+- **Semicolons:** default to a full stop instead. Semicolons in informal writing are a flag.
+- **Exclamation marks:** max 1 for the entire piece, only if genuinely warranted.
+- **Bold text:** use for real emphasis only, not to highlight every key phrase. Bold-everything is an AI formatting habit.
+
+---
+
+### Step 7 — Dual-Pass Calibration
+
+Before delivering, run two distinct passes. They catch different things.
+
+**Pass 1 — Detector Pass**
+Read purely for technical signals. Ignore meaning. Ask:
+- Does sentence length vary significantly within each paragraph?
+- Would any sentence be the statistically obvious next sentence given the previous one?
+- Is there any vocabulary from the kill list?
+- Does the structure match any common AI template?
+Fix anything that fails. This pass is about the machine.
+
+**Pass 2 — Reader Pass**
+Read as if you've never seen this topic before. Ask:
+- Would a person actually write this sentence?
+- Is there at least one moment of real opinion, specific detail, or acknowledged uncertainty?
+- Does anything feel like it was written to sound correct rather than to communicate?
+- Would reading this aloud feel natural or slightly robotic?
+Fix anything that fails. This pass is about the human.
+
+The two passes catch different failures. Don't merge them into one read.
+
+---
+
+### Step 8 — Delivery Check
+
+Before output:
+- [ ] No kill-list vocabulary remains
+- [ ] No verb inflation ("serves as", "stands as", "boasts")
+- [ ] No lexical rotation (synonym cycling)
+- [ ] Sentence length varies within every paragraph
+- [ ] No three-point argument templates
+- [ ] No hollow scope claims
+- [ ] No bureaucratic list structure (bold-label + colon bullets)
+- [ ] No hollow openers or closers
+- [ ] No chatbot artifacts
 - [ ] Em dash count ≤ 1 per 300 words
-- [ ] No inline-header bullet formatting
-- [ ] No rule-of-three forcing
-- [ ] No copula avoidance tells ("serves as", "stands as", "boasts")
-- [ ] No synonym cycling
-- [ ] Tone matches stated purpose and register
-- [ ] Text reads naturally aloud
+- [ ] Authenticity score ≥ 7/10 across the five dimensions
+- [ ] Tone matches register guide
+- [ ] Both calibration passes complete
 
 ---
 
 ## Output Format
 
-**For short texts (under 300 words):** Deliver the final rewrite directly.
+**Short text (under 300 words):** deliver the final rewrite directly, no preamble.
 
-**For longer texts (300+ words):** Use this format:
+**Long text (300+ words):**
 
----
-*[Draft rewrite]*
+```
+[Rewritten text]
 
-**Self-audit — remaining AI tells:**
-- [bullet 1]
-- [bullet 2]
+Calibration notes:
+- Detector pass: [1–2 things fixed]
+- Reader pass: [1–2 things added or changed]
+- Register: [what register this was written to]
+```
 
-*[Final rewrite after self-audit corrections]*
-
-**Changes made:** [2–3 specific things you changed and why]
-
----
-
-Always deliver the **final** version last. The self-audit draft is shown so the user can see the reasoning, not because it's acceptable output.
+Keep calibration notes brief. They're for the user's reference, not a performance of effort.
 
 ---
 
 ## Register Guide
 
-| Format | Contractions | Formality | Personal Voice |
-|---|---|---|---|
-| Academic essay | Low | High | Very low |
-| LinkedIn post | Medium | Medium | High |
-| Blog post | High | Low–medium | High |
-| Business email | Medium | Medium–high | Low |
-| News article | Low | High | None |
-| Creative writing | Very high | Low | Very high |
+| Format | Contractions | Formality | Opinion | Specificity |
+|---|---|---|---|---|
+| Academic essay | Low | High | Very low | High (citations) |
+| LinkedIn post | Medium | Medium | High | Medium |
+| Blog post | High | Low–medium | High | High |
+| Business email | Medium | Medium–high | Low | Medium |
+| News article | Low | High | None | Very high |
+| Creative writing | Very high | Low | Very high | High (sensory) |
+| Technical docs | Low | High | Low | Very high |
 
 ---
 
-## Model-Specific Fingerprints
+## Model Fingerprints
 
-Knowing which model generated the text helps target the right tells:
+Knowing the source model targets the cleanup. If the user identifies the source, use this:
 
-- **ChatGPT (GPT-4o):** Opens with "Certainly!" or "Absolutely!", high em dash density, "delve/tapestry/realm/testament to", balanced-argument structure on every topic, rule-of-three everywhere
-- **Claude (Anthropic):** Opens with "I'd be happy to..." or "I'd love to...", longer hedged sentences, heavy em dash and comma-clause use, inline-header bullet formatting
-- **Gemini:** More conversational but over-structured, bullet-heavy, "Let's explore", "Dive into", emojis in headings
-- **GPT-5+:** Fewer em dashes, more semicolons, still over-formal in academic contexts, synonym cycling is pronounced
+**ChatGPT (GPT-4o):** "Certainly!" / "Absolutely!" openers, high em dash density, delve/tapestry/realm/testament cluster, three-point arguments on every topic, balanced-view hedging regardless of whether balance is warranted.
+
+**Claude (Anthropic):** "I'd be happy to..." opener, comma-heavy long sentences, heavy em dash use as a connector (not emphasis), bureaucratic bold-label bullet lists, over-structured responses with headers for everything.
+
+**Gemini:** Bullet-heavy, emojis in structure, "Let's explore..." / "Dive into...", conversational framing that collapses into templates, inconsistent register (too casual then suddenly formal).
+
+**GPT-5+:** Fewer em dashes, heavier semicolons, pronounced lexical rotation (synonym cycling), over-formal in academic or professional registers even when the context doesn't call for it.
+
+If the source is unknown, run the vocabulary pass — the kill list has model-specific flags in `references/kill-list.md`.
 
 ---
 
 ## Reference Files
 
-- `references/kill-list.md` — Full categorized list of AI-flagged words and phrases
-- `references/examples.md` — Before/after rewrites with self-audit annotations across six contexts
+- `references/kill-list.md` — Full kill list organized by tier and model source, with replacements
+- `references/examples.md` — Full before/after rewrites across six formats showing both calibration passes
